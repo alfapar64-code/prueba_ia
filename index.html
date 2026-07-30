@@ -3,28 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prueba de Remito con IA</title>
+    <title>Lector de Remitos IA</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
-        .container { background: white; padding: 20px; border-radius: 10px; max-width: 400px; margin: 0 auto; }
-        button, input { width: 100%; padding: 12px; margin-top: 10px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc;}
-        #btn-analizar { background: #007bff; color: white; border: none; font-weight: bold; cursor: pointer; }
-        #btn-modelos { background: #ff9800; color: white; border: none; font-weight: bold; margin-top: 15px; cursor: pointer; }
-        #resultado { margin-top: 20px; padding: 15px; background: #333; color: #0f0; min-height: 100px; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word; font-family: monospace; font-size: 13px;}
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background: #e3f2fd; margin: 0;}
+        .container { background: white; padding: 25px; border-radius: 12px; max-width: 400px; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1);}
+        h2 { text-align: center; color: #1976d2; margin-top: 0;}
+        button, input { width: 100%; padding: 12px; margin-top: 15px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box;}
+        #btn-analizar { background: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 1.1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
+        #btn-analizar:active { background: #218838; transform: translateY(1px); }
+        #resultado { margin-top: 20px; padding: 15px; background: #f8f9fa; color: #333; min-height: 120px; border-radius: 8px; border: 1px solid #dee2e6; white-space: pre-wrap; font-size: 15px; line-height: 1.5;}
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Lector IA (Auto-Reparación)</h2>
+    <h2>📸 Escáner de Remitos</h2>
     
+    <!-- Tu API Key -->
     <input type="password" id="apiKey" placeholder="Pega aquí tu API Key de Gemini">
+    
+    <!-- Botón para abrir la cámara -->
     <input type="file" id="fotoRemito" accept="image/*" capture="environment">
     
-    <button id="btn-analizar" onclick="procesarImagen()">1. Analizar Remito</button>
-    <button id="btn-modelos" onclick="listarModelos()">2. Ver Modelos (Si falla el paso 1)</button>
+    <button id="btn-analizar" onclick="procesarImagen()">Analizar Remito</button>
 
-    <div id="resultado">Esperando acción...</div>
+    <div id="resultado">Esperando la foto del remito...</div>
 </div>
 
 <script>
@@ -34,13 +37,13 @@
         const resultadoDiv = document.getElementById('resultado');
 
         if (!apiKey || fileInput.files.length === 0) {
-            alert("Falta la API Key o la foto del remito.");
+            alert("⚠️ Falta la API Key o la foto del remito.");
             return;
         }
 
-        resultadoDiv.style.background = "#333";
-        resultadoDiv.style.color = "#0f0";
-        resultadoDiv.innerHTML = "⏳ Intentando con la versión oficial (v1)...";
+        resultadoDiv.style.background = "#fff3cd";
+        resultadoDiv.style.color = "#856404";
+        resultadoDiv.innerHTML = "⏳ La Inteligencia Artificial está leyendo la imagen y calculando los cajones. Por favor, espera unos segundos...";
 
         const file = fileInput.files[0];
         const reader = new FileReader();
@@ -51,15 +54,15 @@
             const payload = {
                 contents: [{
                     parts: [
-                        { text: "Analiza este remito de entrega. Extrae los nombres de los productos y sus cantidades originales. Si son empanadas, divide la cantidad entre 30 para obtener los cajones. Si son burritos, divide entre 14. Devuelve el resultado en una lista clara, sin texto adicional." },
+                        { text: "Eres un asistente logístico. Analiza este remito de entrega. Extrae los nombres de los productos y sus cantidades originales. Si son empanadas, divide la cantidad original entre 30 para obtener los cajones. Si son burritos, divide la cantidad original entre 14 para obtener los cajones. Devuelve el resultado en una lista simple y clara, mostrando el nombre del producto y la cantidad final de cajones. No agregues texto extra ni explicaciones." },
                         { inline_data: { mime_type: file.type, data: base64Image } }
                     ]
                 }]
             };
 
             try {
-                // Cambiamos a v1 (versión oficial) y regresamos al nombre base
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                // AHORA SÍ: Usamos gemini-2.5-flash tal cual te lo autorizó Google
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -68,52 +71,21 @@
                 const data = await response.json();
                 
                 if (response.ok && data.candidates && data.candidates.length > 0) {
-                    resultadoDiv.style.background = "#e9ecef";
-                    resultadoDiv.style.color = "#000";
-                    resultadoDiv.innerHTML = data.candidates[0].content.parts[0].text;
+                    resultadoDiv.style.background = "#d4edda";
+                    resultadoDiv.style.color = "#155724";
+                    resultadoDiv.innerHTML = "✅ **Lectura Completada:**\n\n" + data.candidates[0].content.parts[0].text;
                 } else {
-                    resultadoDiv.style.background = "#333";
-                    resultadoDiv.style.color = "#ff4444";
-                    resultadoDiv.innerHTML = "ERROR DETALLADO:\n" + JSON.stringify(data, null, 2) + "\n\n👉 POR FAVOR TOCA EL BOTÓN NARANJA '2. Ver Modelos'";
+                    resultadoDiv.style.background = "#f8d7da";
+                    resultadoDiv.style.color = "#721c24";
+                    resultadoDiv.innerHTML = "❌ Hubo un error procesando la imagen. Intenta tomar la foto con mejor iluminación.\n\nDetalle técnico: " + (data.error ? data.error.message : "Error desconocido");
                 }
             } catch (error) {
-                resultadoDiv.style.background = "#333";
-                resultadoDiv.style.color = "#ff4444";
-                resultadoDiv.innerHTML = "Error de conexión: " + error.message;
+                resultadoDiv.style.background = "#f8d7da";
+                resultadoDiv.style.color = "#721c24";
+                resultadoDiv.innerHTML = "❌ Error de conexión. Revisa tu internet.\n" + error.message;
             }
         }
         reader.readAsDataURL(file);
-    }
-
-    // Esta función le pregunta directamente a Google qué modelos están habilitados
-    async function listarModelos() {
-        const apiKey = document.getElementById('apiKey').value.trim(); 
-        const resultadoDiv = document.getElementById('resultado');
-        
-        if (!apiKey) {
-            alert("Por favor, pega tu API Key primero.");
-            return;
-        }
-
-        resultadoDiv.style.background = "#333";
-        resultadoDiv.style.color = "#0f0";
-        resultadoDiv.innerHTML = "🔍 Consultando directamente a Google los modelos compatibles...";
-
-        try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-            const data = await response.json();
-            
-            if (data.models) {
-                const nombres = data.models.map(m => m.name).join('\n');
-                resultadoDiv.style.color = "#00bcd4";
-                resultadoDiv.innerHTML = "✅ MODELOS HABILITADOS EN TU LLAVE:\n(Toma una captura de esto)\n\n" + nombres;
-            } else {
-                resultadoDiv.style.color = "#ff4444";
-                resultadoDiv.innerHTML = "ERROR AL LISTAR:\n" + JSON.stringify(data, null, 2);
-            }
-        } catch (error) {
-            resultadoDiv.innerHTML = "Error de conexión: " + error.message;
-        }
     }
 </script>
 
